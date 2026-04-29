@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+pyautogui
+opencv-python
+pytesseract
+pillow
+numpy
+faiss-cpu
+streamlit
+openai
+pydantic
+python-dotenv
+cryptography
+SpeechRecognition
+# face_recognition
+# pyaudio
