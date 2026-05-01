@@ -1,44 +1,31 @@
-# NeuroPilot AI – Predictive Computer-Use Agent
+# VoxOS Pro – Intelligent Voice & Vision PC Controller
 
-NeuroPilot AI is an autonomous, self-learning, and predictive computer-use agent. It follows a real-world Perception → Reasoning → Action loop to interact with a computer using vision and mouse/keyboard control, bypassing APIs. It features a multi-agent architecture, a predictive engine, and a multi-layer biometric security system.
+VoxOS is a high-performance, full-stack AI application that allows you to control your entire PC using natural language voice commands and computer vision.
 
-## Features
-- **Computer Control**: Uses OCR and vision to detect UI elements, moves the mouse, clicks, and types autonomously.
-- **Predictive Engine**: Learns user habits to predict and execute next actions.
-- **Multi-Agent System**: Comprises Planner, Executor, Critic, and Learning agents.
-- **Self-Healing**: Retries failed actions with alternative strategies.
-- **Security System**: Employs face recognition, voice authentication, liveness detection, continuous tracking, and encrypted biometric storage.
+## 🚀 Pro Features
+- **Intelligent Voice Control**: No wake-word required. Real-time interim speech recognition with high accuracy.
+- **Vision Engine**: Uses OCR (Tesseract) to "see" your screen and perform actions like "click Login".
+- **Performance Analytics**: Real-time dashboard monitoring API latency, CPU, and Memory usage.
+- **AI Prediction Engine**: Predicts your next move and suggests actions to reduce friction.
+- **One-Click Launch**: Includes a `run.bat` for instant startup and automatic browser opening.
+- **Microservices Ready**: Fully containerized with Docker and Docker Compose (including Redis).
 
-## Setup Instructions
+## 🛠️ Quick Start (One-Click)
+1. **Double-click** `run.bat` in the project root.
+2. The browser will automatically open to **http://localhost:8000**.
+3. Click the **Mic** button and start speaking (e.g., "open notepad", "click search").
 
-1. Install system dependencies for OCR and audio:
-   - **Tesseract OCR**: Download and install from https://github.com/UB-Mannheim/tesseract/wiki
-   - Ensure Tesseract is added to your system PATH or configured in `vision.py`.
-   - **PyAudio** might require specific C++ build tools on Windows.
+## 📂 Architecture
+- **Backend**: FastAPI (Python) with Async execution and WebSocket streaming.
+- **Frontend**: Vanilla JS + CSS (Glassmorphism design) with real-time analytics overlay.
+- **Engines**: 
+  - `VisionEngine`: Screen perception via OCR.
+  - `SystemController`: Robust Windows automation.
+  - `PredictionEngine`: AI-driven workflow suggestions.
 
-2. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+## ⚙️ Configuration
+- **Tesseract OCR**: Ensure Tesseract is installed for vision features to work.
+- **API Keys**: Set your `OPENAI_API_KEY` for advanced reasoning features.
 
-3. Configure environment variables:
-   Create a `.env` file in the root directory:
-   ```env
-   OPENAI_API_KEY=your_openai_api_key
-   ```
-
-4. Run the Backend API:
-   ```bash
-   uvicorn main:app --reload
-   ```
-
-5. Run the Frontend Dashboard (Streamlit):
-   ```bash
-   cd frontend
-   streamlit run app.py
-   ```
-
-## Demo Use Cases
-- "Open Notepad and type 'Hello World'"
-- "Search for 'Latest AI news' on YouTube"
-- Predictively preparing a workspace (opening IDE, browser, and terminal) when the user logs in.
+---
+*Developed as part of the NeuroPilot AI ecosystem.*
