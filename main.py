@@ -104,6 +104,10 @@ async def process_voice_command(command: VoiceCommand, background_tasks: Backgro
     commands = parser.split_commands(text)
     tasks = [parser.parse(cmd) for cmd in commands]
     
+    print(f"[Backend] Parsed {len(tasks)} tasks from: '{text}'")
+    for i, t in enumerate(tasks):
+        print(f"  Task {i+1}: {t['action']}({t['params']})")
+    
     # Broadcast tasks to frontend via WebSocket
     await manager.broadcast({"type": "tasks", "data": tasks})
     
