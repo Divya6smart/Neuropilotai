@@ -37,8 +37,22 @@ class Orchestrator:
             messages=[{"role": "system", "content": prompt}]
         )
         
-        plan = json.loads(response.choices[0].message.content)
-        print(f"[Orchestrator] Plan: {plan}")
+        raw_content = response.choices[0].message.content.strip()
+        # Handle potential markdown blocks
+        if raw_content.startswith("```"):
+            raw_content = raw_content.split("```")[1]
+            if raw_content.startswith("json"):
+                raw_content = raw_content[4:]
+        
+        try:
+            plan = json.loads(raw_content)
+        except Exception as e:
+            print(f"[Orchestrator] JSON Parse Error: {e}. Raw: {raw_content}")
+            # Fallback to simple regex or direct match if simple
+            if "SystemAgent" in raw_content: plan = ["SystemAgent"]
+            else: plan = []
+
+        print(f"[Orchestrator] Planned Agents: {plan}")
         
         # 2. Execution Phase
         results = []
