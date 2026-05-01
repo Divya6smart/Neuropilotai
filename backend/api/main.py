@@ -14,7 +14,7 @@ app = FastAPI(title="NeuroPilot AI - Elite DevOps Orchestrator")
 
 @app.get("/analytics")
 async def get_analytics():
-    return monitor.get_stats()
+    return monitor.get_metrics()
 
 # Path to dashboard
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
