@@ -11,6 +11,7 @@ import asyncio
 import time
 import webbrowser
 from typing import List
+from contextlib import asynccontextmanager
 
 # Add current directory to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -25,7 +26,18 @@ from backend.executor.executor import TaskExecutor
 from backend.analytics.monitor import monitor
 from backend.prediction.engine import predictor
 
-app = FastAPI(title="VoxOS - Voice + Vision PC Controller")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    def open_browser():
+        time.sleep(2)
+        webbrowser.open("http://localhost:8000")
+    
+    import threading
+    threading.Thread(target=open_browser, daemon=True).start()
+    yield
+
+app = FastAPI(title="VoxOS - Voice + Vision PC Controller", lifespan=lifespan)
 
 # Latency Monitoring Middleware
 @app.middleware("http")
@@ -71,15 +83,6 @@ controller = SystemController()
 parser = CommandParser()
 executor = TaskExecutor(controller, vision)
 
-@app.on_event("startup")
-async def startup_event():
-    # Open browser after a short delay to ensure server is ready
-    def open_browser():
-        time.sleep(2)
-        webbrowser.open("http://localhost:8000")
-    
-    import threading
-    threading.Thread(target=open_browser, daemon=True).start()
 
 class VoiceCommand(BaseModel):
     text: str
