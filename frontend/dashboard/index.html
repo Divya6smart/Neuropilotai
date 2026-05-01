@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroPilot AI - Elite Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --secondary: #3a7bd5;
+            --accent: #ff007a;
+            --bg: #0b0e14;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --text: #ffffff;
+            --success: #00ff88;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, #1a2a6c, #b21f1f, #fdbb2d);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .agent-timeline {
+            margin-top: 1.5rem;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 1rem;
+            padding-bottom: 1.5rem;
+            border-left: 2px solid rgba(255,255,255,0.1);
+            margin-left: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: var(--success);
+            color: black;
+            font-weight: 700;
+        }
+
+        .metrics-card {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 65%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .input-group {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        input {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 1rem;
+            color: white;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+        }
+
+        button {
+            background: var(--primary);
+            color: black;
+            border: none;
+            border-radius: 16px;
+            padding: 0 2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>NeuroPilot AI <span style="font-size: 1rem; opacity: 0.5; vertical-align: middle;">ELITE v2.0</span></h1>
+            <div id="connection-status" class="status-badge">System Online</div>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2>Agent Orchestration</h2>
+                <div class="input-group">
+                    <input type="text" id="task-input" placeholder="Enter high-level command (e.g. Run security scan and review code)">
+                    <button id="run-btn">Execute</button>
+                </div>
+                
+                <div class="agent-timeline" id="timeline">
+                    <!-- Timeline items injected here -->
+                </div>
+            </div>
+
+            <div class="metrics-card card">
+                <h2>System Health</h2>
+                <div class="metric">
+                    <span>Orchestrator Load</span>
+                    <span>Low</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 15%;"></div></div>
+
+                <div class="metric">
+                    <span>Memory Usage</span>
+                    <span>4.2 GB</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 45%;"></div></div>
+
+                <div class="metric">
+                    <span>Agent Efficiency</span>
+                    <span>98.2%</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 98%;"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const timeline = document.getElementById('timeline');
+        const runBtn = document.getElementById('run-btn');
+        const taskInput = document.getElementById('task-input');
+
+        function addTimelineEvent(agent, output) {
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            item.innerHTML = `
+                <div>
+                    <div style="font-weight: 700; color: var(--primary);">${agent}</div>
+                    <div style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.25rem;">${output}</div>
+                </div>
+            `;
+            timeline.prepend(item);
+        }
+
+        runBtn.onclick = async () => {
+            const task = taskInput.value;
+            if (!task) return;
+            
+            runBtn.disabled = true;
+            runBtn.innerText = "Planning...";
+            
+            try {
+                const res = await fetch('/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task })
+                });
+                const data = await res.json();
+                
+                data.results.forEach(r => {
+                    addTimelineEvent(r.agent_name, r.output);
+                });
+            } catch (e) {
+                addTimelineEvent("Error", "Orchestration failed: " + e.message);
+            } finally {
+                runBtn.disabled = false;
+                runBtn.innerText = "Execute";
+                taskInput.value = '';
+            }
+        };
+
+        // Live status updates via WebSocket
+        const ws = new WebSocket(`ws://${window.location.host}/ws/events`);
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            document.getElementById('connection-status').innerText = `Active Agents: ${data.agent_count}`;
+        };
+    </script>
+</body>
+</html>
