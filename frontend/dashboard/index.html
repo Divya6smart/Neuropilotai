@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeuroPilot AI - Elite Dashboard</title>
+    <title>NeuroPilot AI - Unified Elite Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -19,15 +19,14 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at top right, #1a2a6c, #b21f1f, #fdbb2d);
-            background: var(--bg);
+            background: radial-gradient(circle at bottom left, #121212, #000000);
             color: var(--text);
             min-height: 100vh;
             overflow-x: hidden;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
         }
@@ -36,13 +35,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 3rem;
-            animation: fadeInDown 0.8s ease-out;
+            margin-bottom: 2rem;
         }
 
         h1 {
             font-family: 'Outfit', sans-serif;
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             background: linear-gradient(90deg, var(--primary), var(--success));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -50,8 +48,8 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 1.5rem;
         }
 
         .card {
@@ -59,77 +57,49 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 24px;
-            padding: 2rem;
+            padding: 1.5rem;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
 
-        .agent-timeline {
-            margin-top: 1.5rem;
-        }
-
-        .timeline-item {
-            display: flex;
-            gap: 1rem;
-            padding-bottom: 1.5rem;
-            border-left: 2px solid rgba(255,255,255,0.1);
-            margin-left: 10px;
-            padding-left: 20px;
-            position: relative;
-        }
-
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: -7px;
-            top: 0;
-            width: 12px;
-            height: 12px;
-            background: var(--primary);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--primary);
-        }
-
-        .status-badge {
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 12px;
-            background: var(--success);
-            color: black;
-            font-weight: 700;
-        }
-
-        .metrics-card {
+        /* Voice Control Section */
+        .voice-section {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .metric {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
+            text-align: center;
         }
 
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
-            margin-top: 0.5rem;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            width: 65%;
-            box-shadow: 0 0 10px var(--primary);
-        }
-
-        .input-group {
-            margin-top: 2rem;
+        .mic-btn {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
             display: flex;
-            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.4s;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+        }
+
+        .mic-btn.listening {
+            animation: pulse 1.5s infinite;
+            background: var(--accent);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 122, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(255, 0, 122, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 122, 0); }
+        }
+
+        /* Orchestration Section */
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
         }
 
         input {
@@ -137,105 +107,158 @@
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px;
-            padding: 1rem;
+            padding: 0.8rem 1.2rem;
             color: white;
             outline: none;
-            transition: 0.3s;
         }
 
-        input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+        .timeline-item {
+            padding: 1rem;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            margin-bottom: 0.75rem;
+            border-left: 3px solid var(--primary);
         }
 
-        button {
+        /* Analytics Overlay */
+        .metrics {
+            font-size: 0.85rem;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            margin-top: 4px;
+        }
+
+        .progress-fill {
+            height: 100%;
             background: var(--primary);
-            color: black;
-            border: none;
-            border-radius: 16px;
-            padding: 0 2rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
+            border-radius: 2px;
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
-        }
-
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>NeuroPilot AI <span style="font-size: 1rem; opacity: 0.5; vertical-align: middle;">ELITE v2.0</span></h1>
-            <div id="connection-status" class="status-badge">System Online</div>
+            <h1>NeuroPilot <span style="color: var(--primary);">Unified</span></h1>
+            <div id="status-badge" class="card" style="padding: 0.5rem 1rem; border-radius: 12px; font-size: 0.8rem;">
+                <span id="status-text">System Standby</span>
+            </div>
         </header>
 
         <div class="dashboard-grid">
-            <div class="card">
-                <h2>Agent Orchestration</h2>
-                <div class="input-group">
-                    <input type="text" id="task-input" placeholder="Enter high-level command (e.g. Run security scan and review code)">
-                    <button id="run-btn">Execute</button>
+            <!-- Left: Voice Control -->
+            <div class="card voice-section">
+                <h2>Voice Hub</h2>
+                <p style="font-size: 0.8rem; opacity: 0.6; margin-bottom: 1.5rem;">Hands-free PC Control</p>
+                <div class="mic-btn" id="mic-btn">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
                 </div>
-                
-                <div class="agent-timeline" id="timeline">
-                    <!-- Timeline items injected here -->
+                <div id="heard-text" style="font-size: 0.9rem; min-height: 1.2rem; color: var(--primary);"></div>
+            </div>
+
+            <!-- Center: Orchestrator -->
+            <div class="card">
+                <h2>AI Orchestration</h2>
+                <div class="input-group" style="margin-top: 1rem;">
+                    <input type="text" id="task-input" placeholder="Type a DevOps or System task...">
+                    <button id="run-btn" style="background: var(--primary); border: none; padding: 0 1.5rem; border-radius: 16px; font-weight: 700; cursor: pointer;">Run</button>
+                </div>
+                <div id="timeline" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                    <div class="timeline-item">
+                        <div style="font-weight: 700; font-size: 0.8rem; color: var(--success);">System Ready</div>
+                        <div style="font-size: 0.85rem; opacity: 0.7;">Waiting for orchestration events...</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="metrics-card card">
-                <h2>System Health</h2>
-                <div class="metric">
-                    <span>Orchestrator Load</span>
-                    <span>Low</span>
+            <!-- Right: Health & Metrics -->
+            <div class="card metrics">
+                <h2>Health Metrics</h2>
+                <div style="margin-top: 1.5rem;">
+                    <div class="metric-row"><span>Agent Latency</span><span id="metric-latency">-- ms</span></div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 20%;"></div></div>
                 </div>
-                <div class="progress-bar"><div class="progress-fill" style="width: 15%;"></div></div>
-
-                <div class="metric">
-                    <span>Memory Usage</span>
-                    <span>4.2 GB</span>
+                <div style="margin-top: 1.5rem;">
+                    <div class="metric-row"><span>Memory Store</span><span id="metric-mem">-- %</span></div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 45%;"></div></div>
                 </div>
-                <div class="progress-bar"><div class="progress-fill" style="width: 45%;"></div></div>
-
-                <div class="metric">
-                    <span>Agent Efficiency</span>
-                    <span>98.2%</span>
+                <div style="margin-top: 1.5rem;">
+                    <div class="metric-row"><span>Security Risk</span><span style="color: var(--success);">Minimal</span></div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 5%; background: var(--success);"></div></div>
                 </div>
-                <div class="progress-bar"><div class="progress-fill" style="width: 98%;"></div></div>
             </div>
         </div>
     </div>
 
     <script>
-        const timeline = document.getElementById('timeline');
-        const runBtn = document.getElementById('run-btn');
+        const micBtn = document.getElementById('mic-btn');
+        const heardText = document.getElementById('heard-text');
         const taskInput = document.getElementById('task-input');
+        const runBtn = document.getElementById('run-btn');
+        const timeline = document.getElementById('timeline');
+        const statusText = document.getElementById('status-text');
 
-        function addTimelineEvent(agent, output) {
-            const item = document.createElement('div');
-            item.className = 'timeline-item';
-            item.innerHTML = `
-                <div>
-                    <div style="font-weight: 700; color: var(--primary);">${agent}</div>
-                    <div style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.25rem;">${output}</div>
-                </div>
-            `;
-            timeline.prepend(item);
+        let recognition;
+        let isListening = false;
+
+        // Initialize Web Speech
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+                isListening = true;
+                micBtn.classList.add('listening');
+                statusText.innerText = 'Listening...';
+            };
+
+            recognition.onend = () => {
+                if (isListening) try { recognition.start(); } catch(e) {}
+                else {
+                    micBtn.classList.remove('listening');
+                    statusText.innerText = 'System Standby';
+                }
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        const final = event.results[i][0].transcript;
+                        executeTask(final);
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                heardText.innerText = interimTranscript;
+            };
         }
 
-        runBtn.onclick = async () => {
-            const task = taskInput.value;
+        micBtn.onclick = () => {
+            if (isListening) {
+                isListening = false;
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        };
+
+        async function executeTask(task) {
             if (!task) return;
-            
-            runBtn.disabled = true;
-            runBtn.innerText = "Planning...";
+            addTimelineEvent("User Request", task, "var(--primary)");
             
             try {
                 const res = await fetch('/execute', {
@@ -244,24 +267,49 @@
                     body: JSON.stringify({ task })
                 });
                 const data = await res.json();
-                
                 data.results.forEach(r => {
-                    addTimelineEvent(r.agent_name, r.output);
+                    addTimelineEvent(r.agent_name, r.output, "var(--success)");
                 });
             } catch (e) {
-                addTimelineEvent("Error", "Orchestration failed: " + e.message);
-            } finally {
-                runBtn.disabled = false;
-                runBtn.innerText = "Execute";
-                taskInput.value = '';
+                addTimelineEvent("Error", e.message, "var(--accent)");
             }
+        }
+
+        runBtn.onclick = () => {
+            const task = taskInput.value;
+            executeTask(task);
+            taskInput.value = '';
         };
 
-        // Live status updates via WebSocket
+        function addTimelineEvent(agent, output, color) {
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            item.style.borderColor = color;
+            item.innerHTML = `
+                <div style="font-weight: 700; font-size: 0.8rem; color: ${color};">${agent}</div>
+                <div style="font-size: 0.85rem; opacity: 0.8;">${output}</div>
+            `;
+            timeline.prepend(item);
+        }
+
+        // Live metrics polling
+        async function updateMetrics() {
+            try {
+                const res = await fetch('/analytics');
+                const data = await res.json();
+                document.getElementById('metric-latency').innerText = `${data.avg_latency_ms} ms`;
+                document.getElementById('metric-mem').innerText = `${data.memory_percent} %`;
+            } catch (e) {}
+        }
+        setInterval(updateMetrics, 3000);
+
+        // WS Connection
         const ws = new WebSocket(`ws://${window.location.host}/ws/events`);
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            document.getElementById('connection-status').innerText = `Active Agents: ${data.agent_count}`;
+        ws.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            if (data.agent_count) {
+                document.getElementById('status-badge').style.borderColor = 'var(--success)';
+            }
         };
     </script>
 </body>

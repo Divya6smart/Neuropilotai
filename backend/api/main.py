@@ -6,10 +6,15 @@ from backend.orchestrator.main import orchestrator
 from backend.agents.devops.agents import ReviewAgent, SecurityAgent
 from backend.agents.system.agent import SystemAgent
 from backend.memory.vector_store import memory
+from backend.agents.system.analytics.monitor import monitor
 import asyncio
 import os
 
 app = FastAPI(title="NeuroPilot AI - Elite DevOps Orchestrator")
+
+@app.get("/analytics")
+async def get_analytics():
+    return monitor.get_stats()
 
 # Path to dashboard
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
