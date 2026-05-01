@@ -291,9 +291,36 @@
             <div class="log-container" id="log-container">
                 <div class="log-entry">
                     <span class="command">System</span>
-                    <span class="result">Welcome to VoxOS. I'm ready to assist you.</span>
+                    <span class="result">Welcome to VoxOS Pro. Analytics and Prediction Engine online.</span>
                 </div>
             </div>
+
+            <!-- Prediction Section -->
+            <div class="prediction-section" id="prediction-section" style="display:none; margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                <div style="font-size: 0.75rem; color: var(--accent-color); margin-bottom: 0.5rem; text-transform: uppercase;">Suggested next steps</div>
+                <div id="prediction-chips" style="display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Dashboard Overlay -->
+    <div style="position: fixed; bottom: 20px; left: 20px; background: var(--card-bg); backdrop-filter: blur(10px); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; z-index: 100; width: 220px;">
+        <div style="font-weight: 600; margin-bottom: 0.5rem; color: var(--accent-color);">Performance Analytics</div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+            <span>Latency</span>
+            <span id="metric-latency">-- ms</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+            <span>CPU</span>
+            <span id="metric-cpu">-- %</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <span>Memory</span>
+            <span id="metric-mem">-- %</span>
+        </div>
+        <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--success); display: flex; align-items: center; gap: 4px;">
+            <div style="width: 6px; height: 6px; background: var(--success); border-radius: 50%;"></div>
+            System Health: Optimized
         </div>
     </div>
 

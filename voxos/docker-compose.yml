@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  voxos-app:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: always
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"

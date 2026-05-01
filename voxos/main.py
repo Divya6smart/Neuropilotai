@@ -8,6 +8,7 @@ import uvicorn
 import os
 import sys
 import asyncio
+import time
 from typing import List
 
 import sys
@@ -22,8 +23,19 @@ from backend.vision.vision_engine import VisionEngine
 from backend.system_control.controller import SystemController
 from backend.command_parser.parser import CommandParser
 from backend.executor.executor import TaskExecutor
+from backend.analytics.monitor import monitor
+from backend.prediction.engine import predictor
 
 app = FastAPI(title="VoxOS - Voice + Vision PC Controller")
+
+# Latency Monitoring Middleware
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = (time.time() - start_time) * 1000
+    monitor.record_latency(process_time)
+    return response
 
 # Enable CORS
 app.add_middleware(
@@ -83,9 +95,14 @@ async def process_voice_command(command: VoiceCommand, background_tasks: Backgro
     # Broadcast tasks to frontend via WebSocket
     await manager.broadcast({"type": "tasks", "data": tasks})
     
-    # Execute in a separate thread to avoid blocking the event loop
+    # Execute
     loop = asyncio.get_event_loop()
     results = await loop.run_in_executor(None, executor.execute_tasks, tasks)
+    
+    # AI Prediction
+    next_suggestions = predictor.predict_next(text)
+    if next_suggestions:
+        await manager.broadcast({"type": "prediction", "data": next_suggestions})
     
     for res in results:
         await manager.broadcast({"type": "execution", "message": res})
@@ -94,8 +111,13 @@ async def process_voice_command(command: VoiceCommand, background_tasks: Backgro
         "status": "success",
         "raw_text": text,
         "parsed_tasks": tasks,
-        "execution_results": results
+        "execution_results": results,
+        "predictions": next_suggestions
     }
+
+@app.get("/analytics")
+async def get_analytics():
+    return monitor.get_metrics()
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

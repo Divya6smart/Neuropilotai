@@ -74,8 +74,44 @@ ws.onmessage = (event) => {
         data.data.forEach(task => {
             addLog('Parsed Task', `${task.action}: ${task.params}`);
         });
+    } else if (data.type === 'prediction') {
+        showPredictions(data.data);
     }
 };
+
+function showPredictions(suggestions) {
+    const section = document.getElementById('prediction-section');
+    const container = document.getElementById('prediction-chips');
+    container.innerHTML = '';
+    
+    suggestions.forEach(s => {
+        const chip = document.createElement('div');
+        chip.style.cssText = 'background: rgba(0,210,255,0.1); border: 1px solid var(--accent-color); padding: 4px 10px; border-radius: 12px; cursor: pointer; font-size: 0.75rem; color: var(--accent-color); transition: 0.2s;';
+        chip.innerText = s;
+        chip.onmouseover = () => chip.style.background = 'rgba(0,210,255,0.2)';
+        chip.onmouseout = () => chip.style.background = 'rgba(0,210,255,0.1)';
+        chip.onclick = () => {
+            addLog('Prediction', `Auto-suggested: ${s}`);
+            sendCommand(`VoxOS ${s}`);
+        };
+        container.appendChild(chip);
+    });
+    
+    section.style.display = suggestions.length ? 'block' : 'none';
+}
+
+async function updateMetrics() {
+    try {
+        const res = await fetch('/analytics');
+        const data = await res.json();
+        document.getElementById('metric-latency').innerText = `${data.avg_latency_ms} ms`;
+        document.getElementById('metric-cpu').innerText = `${data.cpu_percent} %`;
+        document.getElementById('metric-mem').innerText = `${data.memory_percent} %`;
+    } catch (e) {}
+}
+
+setInterval(updateMetrics, 2000);
+updateMetrics();
 
 ws.onopen = () => {
     console.log('WebSocket connected');
