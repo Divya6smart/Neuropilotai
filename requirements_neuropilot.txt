@@ -5,10 +5,11 @@ opencv-python
 pytesseract
 pillow
 numpy
-pyttsx3
+streamlit
+openai
+pydantic
 python-dotenv
+cryptography
 SpeechRecognition
-pyaudio
-whisper
-openai-whisper
-python-multipart
+PyJWT
+websockets

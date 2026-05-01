@@ -61,6 +61,23 @@ micBtn.addEventListener('click', () => {
     }
 });
 
+// Manual Command Input
+const manualCmdInput = document.getElementById('manual-cmd');
+const sendBtn = document.getElementById('send-btn');
+
+sendBtn.addEventListener('click', () => {
+    const cmd = manualCmdInput.value.trim();
+    if (cmd) {
+        addLog('Manual Input', cmd);
+        sendCommand(cmd);
+        manualCmdInput.value = '';
+    }
+});
+
+manualCmdInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendBtn.click();
+});
+
 // Initialize WebSocket for real-time updates
 const ws = new WebSocket(`ws://${window.location.host}/ws`);
 

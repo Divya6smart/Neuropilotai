@@ -1,189 +1,143 @@
-"""NeuroPilot AI — FastAPI backend with WebSocket, JWT auth, CORS, and real-time updates."""
-import logging
-from contextlib import asynccontextmanager
-
-from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Depends, Request
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, BackgroundTasks
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from fastapi.middleware.gzip import GZipMiddleware
+from pydantic import BaseModel
+import uvicorn
+import os
+import sys
+import asyncio
+import time
+from typing import List
 
-from config import config
-from agent.brain import brain_system
-from security.biometrics import security_system
-from security.auth_middleware import AuthManager, get_current_user
-from security.continuous_auth import ContinuousAuthenticator
+# Add current directory to path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
 
-logger = logging.getLogger(__name__)
+# Import VoxOS modules
+from backend.vision.vision_engine import VisionEngine
+from backend.system_control.controller import SystemController
+from backend.command_parser.parser import CommandParser
+from backend.executor.executor import TaskExecutor
+from backend.analytics.monitor import monitor
+from backend.prediction.engine import predictor
 
+app = FastAPI(title="VoxOS - Voice + Vision PC Controller")
 
-# ── Startup / Shutdown ────────────────────────────────────
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Initialize security systems on startup."""
-    warnings = config.validate()
-    for w in warnings:
-        logger.warning(w)
+# Latency Monitoring Middleware
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = (time.time() - start_time) * 1000
+    monitor.record_latency(process_time)
+    return response
 
-    app.state.auth_manager = AuthManager(
-        secret=config.JWT_SECRET,
-        algorithm=config.JWT_ALGORITHM,
-        expiry_minutes=config.JWT_EXPIRY_MINUTES,
-        max_attempts=config.MAX_AUTH_ATTEMPTS,
-        lockout_seconds=config.AUTH_LOCKOUT_SECONDS,
-    )
-    app.state.continuous_auth = ContinuousAuthenticator(
-        threshold=config.CONTINUOUS_AUTH_THRESHOLD
-    )
-    logger.info("NeuroPilot AI backend started")
-    yield
-    logger.info("NeuroPilot AI backend shutting down")
-
-
-app = FastAPI(
-    title="NeuroPilot AI API",
-    version="2.0.0",
-    description="Autonomous computer-use agent with zero-trust security",
-    lifespan=lifespan,
-)
-
-# ── CORS ──────────────────────────────────────────────────
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8501", "http://127.0.0.1:8501"],
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Add Gzip compression for faster asset delivery
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# ── Models ────────────────────────────────────────────────
-class TaskRequest(BaseModel):
-    instruction: str = Field(..., min_length=1, max_length=500,
-                             description="Task instruction for the agent")
+# WebSocket connection manager
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
 
-class AuthFaceRequest(BaseModel):
-    image_path: str = Field(default="data/screenshots/latest.png")
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
 
-class ActivityEvent(BaseModel):
-    activity_type: str = Field(..., pattern="^(keystroke|mouse_move)$")
-    data: dict = Field(default_factory=dict)
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
 
+    async def broadcast(self, message: dict):
+        for connection in self.active_connections:
+            await connection.send_json(message)
 
-# ── Public endpoints ──────────────────────────────────────
-@app.get("/")
-def read_root():
-    return {"status": "NeuroPilot AI is running", "version": "2.0.0"}
+manager = ConnectionManager()
 
+# Initialize engines
+vision = VisionEngine()
+controller = SystemController()
+parser = CommandParser()
+executor = TaskExecutor(controller, vision)
 
-@app.post("/auth/face")
-def auth_face(req: AuthFaceRequest, request: Request):
-    """Authenticate via face biometrics — returns JWT on success."""
-    client_ip = request.client.host if request.client else "unknown"
-    auth_mgr: AuthManager = request.app.state.auth_manager
-    auth_mgr.check_rate_limit(client_ip)
+class VoiceCommand(BaseModel):
+    text: str
 
-    result = security_system.verify_face(req.image_path)
-    if result["authenticated"]:
-        auth_mgr.clear_failed_attempts(client_ip)
-        token = auth_mgr.create_token(
-            user_id=result["user_id"],
-            auth_methods=["face"],
-            risk_level="low" if result["confidence"] > 0.8 else "medium",
-        )
-        return {"status": "Authenticated", "token": token, "risk_level": "low"}
+@app.get("/", response_class=HTMLResponse)
+async def get_index():
+    index_path = os.path.join(current_dir, "frontend", "index.html")
+    with open(index_path, "r") as f:
+        return f.read()
 
-    auth_mgr.record_failed_attempt(client_ip)
-    raise HTTPException(401, "Face authentication failed")
-
-
-@app.post("/auth/multi")
-def auth_multi(request: Request):
-    """Multi-factor authentication (face + voice + device integrity)."""
-    client_ip = request.client.host if request.client else "unknown"
-    auth_mgr: AuthManager = request.app.state.auth_manager
-    auth_mgr.check_rate_limit(client_ip)
-
-    result = security_system.multi_factor_auth(
-        face_image=str(config.SCREENSHOTS_DIR / "latest.png")
-    )
-    if result["overall_authenticated"]:
-        auth_mgr.clear_failed_attempts(client_ip)
-        methods = [k for k, v in result["factors"].items()
-                   if isinstance(v, dict) and v.get("authenticated")]
-        token = auth_mgr.create_token(
-            user_id="primary_user",
-            auth_methods=methods,
-            risk_level=result["risk_level"],
-        )
-        return {"status": "Authenticated", "token": token, **result}
-
-    auth_mgr.record_failed_attempt(client_ip)
-    raise HTTPException(401, detail="Multi-factor auth failed")
-
-
-# ── Protected endpoints (require JWT) ─────────────────────
-@app.post("/execute")
-def execute_task(req: TaskRequest, background_tasks: BackgroundTasks,
-                 user: dict = Depends(get_current_user)):
-    if brain_system.is_running:
-        raise HTTPException(409, "Agent is busy — stop current task first")
-    background_tasks.add_task(brain_system.start_task, req.instruction)
-    return {"status": "Started", "task": req.instruction, "user": user["sub"]}
-
-
-@app.post("/stop")
-def stop_task(user: dict = Depends(get_current_user)):
-    brain_system.stop_task()
-    return {"status": "Stopped"}
-
-
-@app.get("/status")
-def get_status():
-    """Public status endpoint — no auth required for dashboard polling."""
+@app.post("/voice-command")
+async def process_voice_command(command: VoiceCommand, background_tasks: BackgroundTasks = None):
+    text = command.text.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Empty command")
+    
+    await manager.broadcast({"type": "status", "message": "Parsing command..."})
+    
+    commands = parser.split_commands(text)
+    tasks = [parser.parse(cmd) for cmd in commands]
+    
+    # Broadcast tasks to frontend via WebSocket
+    await manager.broadcast({"type": "tasks", "data": tasks})
+    
+    # Execute
+    loop = asyncio.get_event_loop()
+    results = await loop.run_in_executor(None, executor.execute_tasks, tasks)
+    
+    # AI Prediction
+    next_suggestions = predictor.predict_next(text)
+    if next_suggestions:
+        await manager.broadcast({"type": "prediction", "data": next_suggestions})
+    
+    for res in results:
+        await manager.broadcast({"type": "execution", "message": res})
+    
     return {
-        "is_running": brain_system.is_running,
-        "current_task": brain_system.current_task,
+        "status": "success",
+        "raw_text": text,
+        "parsed_tasks": tasks,
+        "execution_results": results,
+        "predictions": next_suggestions
     }
 
+@app.get("/analytics")
+async def get_analytics():
+    return monitor.get_metrics()
 
-# ── Continuous auth ───────────────────────────────────────
-@app.post("/auth/activity")
-def record_activity(event: ActivityEvent,
-                    user: dict = Depends(get_current_user)):
-    """Record user behavior for continuous authentication."""
-    cont_auth: ContinuousAuthenticator = app.state.continuous_auth
-    cont_auth.record_activity(user["sub"], event.activity_type, event.data)
-    confidence = cont_auth.calculate_confidence(user["sub"])
-    return {
-        "confidence": round(confidence, 3),
-        "risk_score": cont_auth.get_risk_score(user["sub"]),
-    }
-
-
-@app.get("/auth/risk/{user_id}")
-def get_risk_score(user_id: str):
-    cont_auth: ContinuousAuthenticator = app.state.continuous_auth
-    return {"risk_score": cont_auth.get_risk_score(user_id)}
-
-
-# ── WebSocket for real-time updates ───────────────────────
-@app.websocket("/ws/agent")
-async def websocket_agent(ws: WebSocket):
-    """Real-time agent status stream via WebSocket."""
-    await ws.accept()
-    brain_system.register_ws(ws)
-    logger.info("WebSocket client connected")
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
     try:
         while True:
-            data = await ws.receive_text()  # keep connection alive
-            if data == "ping":
-                await ws.send_json({"event": "pong"})
+            await websocket.receive_text() # Keep alive
     except WebSocketDisconnect:
-        brain_system.unregister_ws(ws)
-        logger.info("WebSocket client disconnected")
+        manager.disconnect(websocket)
 
+@app.get("/status")
+async def get_status():
+    return {
+        "authenticated": True,
+        "online": True,
+        "last_summary": "System ready",
+        "workflows": ["open_app", "vision_click", "media_control"]
+    }
 
-# ── Memory / History ──────────────────────────────────────
-@app.get("/history")
-def get_history(limit: int = 50, user: dict = Depends(get_current_user)):
-    from agent.memory import memory_system
-    return {"history": memory_system.get_history(limit)}
+# Serve static files from the frontend directory
+static_path = os.path.join(current_dir, "frontend")
+app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
