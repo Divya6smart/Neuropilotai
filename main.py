@@ -9,6 +9,7 @@ import os
 import sys
 import asyncio
 import time
+import webbrowser
 from typing import List
 
 # Add current directory to path
@@ -69,6 +70,16 @@ vision = VisionEngine()
 controller = SystemController()
 parser = CommandParser()
 executor = TaskExecutor(controller, vision)
+
+@app.on_event("startup")
+async def startup_event():
+    # Open browser after a short delay to ensure server is ready
+    def open_browser():
+        time.sleep(2)
+        webbrowser.open("http://localhost:8000")
+    
+    import threading
+    threading.Thread(target=open_browser, daemon=True).start()
 
 class VoiceCommand(BaseModel):
     text: str
