@@ -14,43 +14,40 @@ class Orchestrator:
         self.agents[name] = agent_instance
 
     async def plan_and_execute(self, task_description: str) -> List[AgentResponse]:
-        # 1. Planning Phase (LLM)
-        prompt = f"""
-        You are the NeuroPilot AI Orchestrator. 
-        Available Agents and their capabilities:
-        - ReviewAgent: Analyzes code quality, best practices, and logic.
-        - SecurityAgent: Scans for vulnerabilities, leaks, and security risks.
-        - SystemAgent: Performs local PC actions (Open apps, search web, click screen, write text, close windows).
-        
-        Task: {task_description}
-        
-        Decide which agents to run and in what order. 
-        - For system commands like "open", "search", "click", "write", always include 'SystemAgent'.
-        - For devops commands like "review", "audit", "security", include 'ReviewAgent' or 'SecurityAgent'.
-        
-        Return ONLY a JSON list of agent names.
-        Example: ["ReviewAgent", "SystemAgent"]
-        """
-        
-        response = self.client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "system", "content": prompt}]
-        )
-        
-        raw_content = response.choices[0].message.content.strip()
-        # Handle potential markdown blocks
-        if raw_content.startswith("```"):
-            raw_content = raw_content.split("```")[1]
-            if raw_content.startswith("json"):
-                raw_content = raw_content[4:]
-        
+        # 1. Planning Phase (LLM with Local Fallback)
+        plan = []
         try:
-            plan = json.loads(raw_content)
+            # Check for placeholder key
+            if "replace_" in str(os.getenv("OPENAI_API_KEY")):
+                raise ValueError("Placeholder API Key detected")
+
+            prompt = f"""
+            You are the NeuroPilot AI Orchestrator. 
+            Available Agents: ReviewAgent, SecurityAgent, SystemAgent.
+            Task: {task_description}
+            Return ONLY a JSON list of agent names.
+            """
+            
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "system", "content": prompt}]
+            )
+            raw_content = response.choices[0].message.content.strip()
+            # Clean JSON... (simplified for now as I have the logic above)
+            if "SystemAgent" in raw_content: plan.append("SystemAgent")
+            if "SecurityAgent" in raw_content: plan.append("SecurityAgent")
+            if "ReviewAgent" in raw_content: plan.append("ReviewAgent")
+            
         except Exception as e:
-            print(f"[Orchestrator] JSON Parse Error: {e}. Raw: {raw_content}")
-            # Fallback to simple regex or direct match if simple
-            if "SystemAgent" in raw_content: plan = ["SystemAgent"]
-            else: plan = []
+            print(f"[Orchestrator] Using Local Fallback Planner due to: {e}")
+            # Intelligent local fallback
+            task_lower = task_description.lower()
+            if any(x in task_lower for x in ["open", "search", "click", "launch", "write", "close"]):
+                plan = ["SystemAgent"]
+            if any(x in task_lower for x in ["security", "audit", "vulnerability"]):
+                plan.append("SecurityAgent")
+            if any(x in task_lower for x in ["review", "check", "code"]):
+                plan.append("ReviewAgent")
 
         print(f"[Orchestrator] Planned Agents: {plan}")
         
