@@ -3,10 +3,12 @@ title NeuroPilot AI Elite - Orchestrator
 echo [System] Initializing Elite DevOps Orchestrator...
 
 if "%OPENAI_API_KEY%"=="" (
-    echo [Warning] OPENAI_API_KEY is not set!
-    echo Please set it using: set OPENAI_API_KEY=sk-xxxx
-    echo or add it to your system environment variables.
-    pause
+    if not exist .env (
+        echo [Warning] OPENAI_API_KEY is not set and .env file is missing!
+        echo Please create a .env file with: OPENAI_API_KEY=sk-xxxx
+        echo or set it using: set OPENAI_API_KEY=sk-xxxx
+        pause
+    )
 )
 
 python main.py
