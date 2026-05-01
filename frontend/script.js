@@ -11,7 +11,7 @@ let isListening = false;
 if ('webkitSpeechRecognition' in window) {
     recognition = new webkitSpeechRecognition();
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true; // Show results as you speak
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
@@ -23,23 +23,30 @@ if ('webkitSpeechRecognition' in window) {
     };
 
     recognition.onend = () => {
-        isListening = false;
-        micBtn.classList.remove('listening');
-        statusText.innerText = 'System Online';
-        // Auto restart if it was continuous
-        if (isListening) recognition.start();
+        // Only stop if we manually stopped it
+        if (isListening) {
+            try { recognition.start(); } catch(e) {}
+        } else {
+            micBtn.classList.remove('listening');
+            statusText.innerText = 'System Online';
+        }
     };
 
     recognition.onresult = (event) => {
-        const transcript = event.results[event.results.length - 1][0].transcript.trim();
-        console.log('Transcript:', transcript);
-        
-        // Wake word detection
-        if (transcript.toLowerCase().includes('voxos') || transcript.toLowerCase().includes('jarvis')) {
-            addLog('Voice Input', transcript);
-            sendCommand(transcript);
-        } else {
-            console.log('No wake word detected in:', transcript);
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                const finalTranscript = event.results[i][0].transcript.trim();
+                if (finalTranscript) {
+                    addLog('Voice Input', finalTranscript);
+                    sendCommand(finalTranscript);
+                }
+            } else {
+                interimTranscript += event.results[i][0].transcript;
+            }
+        }
+        if (interimTranscript) {
+            statusText.innerText = "Heard: " + interimTranscript;
         }
     };
 
