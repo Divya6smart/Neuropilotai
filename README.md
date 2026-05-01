@@ -3,12 +3,11 @@
 VoxOS is a high-performance, full-stack AI application that allows you to control your entire PC using natural language voice commands and computer vision.
 
 ## 🚀 Pro Features
-- **Intelligent Voice Control**: No wake-word required. Real-time interim speech recognition with high accuracy.
-- **Vision Engine**: Uses OCR (Tesseract) to "see" your screen and perform actions like "click Login".
-- **Performance Analytics**: Real-time dashboard monitoring API latency, CPU, and Memory usage.
-- **AI Prediction Engine**: Predicts your next move and suggests actions to reduce friction.
-- **One-Click Launch**: Includes a `run.bat` for instant startup and automatic browser opening.
-- **Microservices Ready**: Fully containerized with Docker and Docker Compose (including Redis).
+- **Unified Elite Dashboard**: A single, premium Glassmorphism interface for both Voice PC control and AI DevOps orchestration.
+- **Intelligent Orchestrator**: Uses GPT-4o for complex planning with an **Automatic Local Fallback** (ensuring functionality even without API keys).
+- **Domain-Specific Agents**: Specialized agents for Security Audits, Code Reviews, and System Automation.
+- **Resilient Memory**: ChromaDB vector storage with a MockMemory fallback for zero-crash reliability.
+- **One-Click Launch**: Self-healing `run.bat` that automatically clears port conflicts.
 
 ## 🛠️ Quick Start (One-Click)
 1. **Double-click** `run.bat` in the project root.
