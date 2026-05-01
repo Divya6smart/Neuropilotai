@@ -1,10 +1,11 @@
 import uvicorn
 import os
 from dotenv import load_dotenv
-from backend.api.main import app
 
-# Load environment variables from .env file
+# Load environment variables from .env file MUST come before local imports
 load_dotenv()
+
+from backend.api.main import app
 
 if __name__ == "__main__":
     # Ensure OPENAI_API_KEY is available
