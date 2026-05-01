@@ -1,5 +1,7 @@
 @echo off
 title NeuroPilot AI Elite - Orchestrator
+echo [System] Clearing port 8000...
+powershell -Command "$p = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue; if ($p) { Stop-Process -Id $p.OwningProcess -Force }"
 echo [System] Initializing Elite DevOps Orchestrator...
 
 if "%OPENAI_API_KEY%"=="" (
